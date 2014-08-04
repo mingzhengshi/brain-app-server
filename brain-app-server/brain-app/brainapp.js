@@ -219,8 +219,10 @@ var Loop = (function () {
             _this.timeOfLastFrame = currentTime;
 
             for (var i = 0; i < 4; ++i) {
-                if (apps[i] && (apps[i].isDeleted() == true))
+                if (apps[i] && (apps[i].isDeleted() == true)) {
                     apps[i] = new DummyApp();
+                    saveObj.saveApps[i] = new SaveApp(); // create a new instance (if an old instance exists)
+                }
             }
 
             // Limit the maximum time step
@@ -322,7 +324,11 @@ $('#button-save-app').button().click(function () {
     $.post("saveapp.aspx", {
         save: saveJson
     }, function (data, status) {
-        alert("Data: " + data + "\nStatus: " + status);
+        if (status.toLowerCase() == "success") {
+            alert("save: " + status + "; Use the following URL to retrive the project: \n");
+        } else {
+            alert("save: " + status);
+        }
     });
 });
 
@@ -877,6 +883,7 @@ function brainIconDraggableEvent(model, view) {
             break;
     }
 
+    saveObj.saveApps[appID] = new SaveApp(); // create a new instance (if an old instance exists)
     saveObj.saveApps[appID].surfaceModel = model;
     saveObj.saveApps[appID].view = view;
 
@@ -1157,8 +1164,26 @@ initFromSaveFile();
 // functions
 function initFromSaveFile() {
     var query = window.location.search.substring(1);
+    var json;
     if (query == 'save') {
-        console.log("initFromSaveFile...");
+        $.get("getapp.aspx", function (data, status) {
+            alert("Loading is: " + status + "\nData: " + data);
+            if (status.toLowerCase() == "success") {
+                initApps(data);
+            }
+        });
+    }
+}
+
+function initApps(data) {
+    var save = jQuery.parseJSON(data);
+
+    for (var i = 0; i < 4; i++) {
+        var app = save.saveApps[i];
+        if ((app.surfaceModel != null) && (app.surfaceModel.length > 0)) {
+            // if this app exists:
+            brainIconDraggableEvent(app.surfaceModel, app.view);
+        }
     }
 }
 

@@ -69,6 +69,7 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="brain-app\brainapp.html" />
+    <Content Include="brain-app\getapp.aspx" />
     <Content Include="brain-app\saveapp.aspx" />
     <Content Include="cola.v1.min.js" />
     <Content Include="cola.v2.min.js" />
@@ -79,6 +80,13 @@
     <Content Include="Web.config" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="brain-app\getapp.aspx.cs">
+      <DependentUpon>getapp.aspx</DependentUpon>
+      <SubType>ASPXCodeBehind</SubType>
+    </Compile>
+    <Compile Include="brain-app\getapp.aspx.designer.cs">
+      <DependentUpon>getapp.aspx</DependentUpon>
+    </Compile>
     <Compile Include="brain-app\saveapp.aspx.cs">
       <DependentUpon>saveapp.aspx</DependentUpon>
       <SubType>ASPXCodeBehind</SubType>
