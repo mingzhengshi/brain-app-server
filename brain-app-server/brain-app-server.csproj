@@ -68,7 +68,8 @@
     </None>
   </ItemGroup>
   <ItemGroup>
-    <Content Include="brain-app\brainapp.aspx" />
+    <Content Include="brain-app\brainapp.html" />
+    <Content Include="brain-app\saveapp.aspx" />
     <Content Include="cola.v1.min.js" />
     <Content Include="cola.v2.min.js" />
     <Content Include="cola.v3.min.js" />
@@ -78,12 +79,12 @@
     <Content Include="Web.config" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="brain-app\brainapp.aspx.cs">
-      <DependentUpon>brainapp.aspx</DependentUpon>
+    <Compile Include="brain-app\saveapp.aspx.cs">
+      <DependentUpon>saveapp.aspx</DependentUpon>
       <SubType>ASPXCodeBehind</SubType>
     </Compile>
-    <Compile Include="brain-app\brainapp.aspx.designer.cs">
-      <DependentUpon>brainapp.aspx</DependentUpon>
+    <Compile Include="brain-app\saveapp.aspx.designer.cs">
+      <DependentUpon>saveapp.aspx</DependentUpon>
     </Compile>
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
@@ -92,7 +93,6 @@
     <TypeScriptCompile Include="brain-app\brainapp.ts" />
     <TypeScriptCompile Include="brain-app\input.ts" />
   </ItemGroup>
-  <ItemGroup />
   <PropertyGroup>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">10.0</VisualStudioVersion>
     <VSToolsPath Condition="'$(VSToolsPath)' == ''">$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)</VSToolsPath>
