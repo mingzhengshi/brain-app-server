@@ -11,10 +11,13 @@ namespace brain_app_server.brain_app
     {
         protected void Page_Load(object sender, EventArgs e)
         {
-            string saveString = Request.Form["save"];
-            string path = Server.MapPath("Data") + "\\" + "save_json.txt";
+            string guid = Guid.NewGuid().ToString();
 
+            string saveString = Request.Form["save"];
+            string path = Server.MapPath("save") + "\\" + guid +".txt";
             System.IO.File.WriteAllText(path, saveString);
+
+            Response.Write(guid);
         }
     }
 }

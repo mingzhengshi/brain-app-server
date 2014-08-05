@@ -11,8 +11,16 @@ namespace brain_app_server.brain_app
     {
         protected void Page_Load(object sender, EventArgs e)
         {
-            string path = Server.MapPath("Data") + "\\" + "save_json.txt";
-            string json = System.IO.File.ReadAllText(path);
+            string filename = Request.Form["filename"];
+            string path = Server.MapPath("save") + "\\" + filename + ".txt";
+            string json = "";
+            try
+            {
+                json = System.IO.File.ReadAllText(path);
+            }
+            catch
+            {
+            }
             Response.Write(json);
         }
     }

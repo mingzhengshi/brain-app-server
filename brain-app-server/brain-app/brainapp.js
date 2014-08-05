@@ -325,7 +325,7 @@ $('#button-save-app').button().click(function () {
         save: saveJson
     }, function (data, status) {
         if (status.toLowerCase() == "success") {
-            alert("save: " + status + "; Use the following URL to retrive the project: \n");
+            prompt("The project is saved. Use the following URL to retrive the project:", "?save=" + data);
         } else {
             alert("save: " + status);
         }
@@ -1164,18 +1164,28 @@ initFromSaveFile();
 // functions
 function initFromSaveFile() {
     var query = window.location.search.substring(1);
-    var json;
-    if (query == 'save') {
-        $.get("getapp.aspx", function (data, status) {
-            alert("Loading is: " + status + "\nData: " + data);
-            if (status.toLowerCase() == "success") {
-                initApps(data);
-            }
-        });
+    if (query && query.length > 0) {
+        var p = query.split("=");
+        var json;
+        if (p[0] == 'save') {
+            $.post("getapp.aspx", {
+                filename: p[1]
+            }, function (data, status) {
+                alert("Loading is: " + status + "\nData: " + data);
+                if (status.toLowerCase() == "success") {
+                    initApps(data);
+                }
+            });
+        }
     }
 }
 
 function initApps(data) {
+    if (data == null)
+        return;
+    if (data.length == 0)
+        return;
+
     var save = jQuery.parseJSON(data);
 
     for (var i = 0; i < 4; i++) {
@@ -1274,7 +1284,6 @@ function parseAttributes(text, dataSet) {
 }
 
 //var fcount = 0;
-// this function assumes the columns of the attributes are known
 function setupCrossFilter(attrs) {
     if (!attrs)
         return;
