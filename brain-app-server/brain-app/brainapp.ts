@@ -69,6 +69,24 @@ class DataSet {
 }
 
 class SaveFile {
+    loadExampleData: boolean = false;
+
+    // node size or color
+    nodeSizeOrColor: string;
+
+    nodeSizeAttribute: string;
+    nodeSizeMin: number;
+    nodeSizeMax: number;
+
+    nodeColorAttribute: string;
+    nodeColorDiscrete: string[];
+    nodeColorContinuousMin: string;
+    nodeColorContinuousMax: string;
+
+    // cross filter
+    filteredRecords: any[];
+
+    // brain apps
     saveApps: SaveApp[];
 
     constructor() {
@@ -81,8 +99,31 @@ class SaveFile {
 }
 
 class SaveApp {
+    //---
     surfaceModel: string;
     view: string;
+
+    //---
+    setDataSetView: string;
+
+    //---
+    edgeCount: number;
+
+    //---
+    showingTopologyNetwork: boolean;
+    networkType: string;
+
+    // circular layout:
+    circularBundleAttribute: string;
+    circularSortAttribute: string;
+    circularLableAttribute: string;
+    circularBar1Attribute: string;
+    circularBar2Attribute: string;
+    circularBar1Color: string;
+    circularBar2Color: string;
+    circularBar1Gradient: boolean;
+    circularBar2Gradient: boolean;
+    circularEdgeGradient: boolean;
 }
 
 // Parses, stores, and provides access to brain node attributes from a file
@@ -91,7 +132,7 @@ class Attributes {
     columnNames: string[];
     numRecords: number;
 
-    filteredRecords: Array<number>;
+    filteredRecords: any[];
     filteredRecordsHighlightChanged: boolean = false;
 
     constructor(text: string) {
@@ -191,6 +232,10 @@ interface Application {
     setCircularBarColor(barNo: number, color: string);
     highlightSelectedNodes(filteredIDs: number[]);
     isDeleted();
+    save(saveApp: SaveApp);
+    //init(saveApp: SaveApp);
+    initEdgeCountSlider(saveApp: SaveApp);
+    initShowNetwork(saveApp: SaveApp);
 }
 
 class DummyApp implements Application {
@@ -206,6 +251,10 @@ class DummyApp implements Application {
     setCircularBarColor() { }
     highlightSelectedNodes() { }
     isDeleted() { }
+    save() { }
+    //init() { }
+    initEdgeCountSlider() { }
+    initShowNetwork() { }
 }
 
 // The loop class can be used to run applications that aren't event-based
@@ -331,6 +380,11 @@ $('#upload-attr-2 ').button().click(function () {
 });
 
 $('#button-save-app').button().click(function () {
+    for (var i = 0; i < 4; i++) {
+        var app = saveObj.saveApps[i];
+        if (apps[i]) apps[i].save(app);
+    }
+
     var saveJson = JSON.stringify(saveObj);
     $.post("saveapp.aspx",
         {
@@ -338,7 +392,8 @@ $('#button-save-app').button().click(function () {
         },
         function (data, status) {
             if (status.toLowerCase() == "success") {
-                prompt("The project is saved. Use the following URL to retrive the project:", "?save=" + data);
+                var url = document.URL.split('?')[0];              
+                prompt("The project is saved. Use the following URL to restore the project:", url + "?save=" + data);
             }
             else {
                 alert("save: " + status);
@@ -351,6 +406,10 @@ var divNodeColorPickers;
 var divNodeColorPickersDiscrete;
 
 $('#load-example-data').button().click(function () {
+    loadExampleData();
+});
+
+function loadExampleData() {
     $.get('data/coords.txt', function (text) {
         parseCoordinates(text);
         $('#shared-coords').css({ color: 'green' });
@@ -371,13 +430,19 @@ $('#load-example-data').button().click(function () {
             $('#select-attribute').empty();
             for (var i = 0; i < dataSets[0].attributes.columnNames.length; ++i) {
                 var columnName = dataSets[0].attributes.columnNames[i];
-                $('#select-attribute').append('<option value = "' + columnName + '">' + columnName + '</option>');            }            $('#div-set-node-scale').css({ visibility: 'visible' });            $('#div-node-size').css({ visibility: 'visible' });            $('#div-node-color-pickers').css({ visibility: 'visible' });            $('#div-node-color-pickers-discrete').css({ visibility: 'visible' });                     if ($('#div-node-size').length > 0) divNodeSizeRange = $('#div-node-size').detach();            if ($('#div-node-color-pickers').length > 0) divNodeColorPickers = $('#div-node-color-pickers').detach();              if ($('#div-node-color-pickers-discrete').length > 0) divNodeColorPickersDiscrete = $('#div-node-color-pickers-discrete').detach();             //var attribute = $('#select-attribute').val();            //setupNodeSizeRangeSlider(attribute); // default option            $('#select-node-size-color').val('node-default');            $('#select-attribute').prop("disabled", "disabled");             setupCrossFilter(dataSets[0].attributes);        }   
+                $('#select-attribute').append('<option value = "' + columnName + '">' + columnName + '</option>');            }            $('#div-set-node-scale').css({ visibility: 'visible' });            $('#div-node-size').css({ visibility: 'visible' });            $('#div-node-color-pickers').css({ visibility: 'visible' });            $('#div-node-color-pickers-discrete').css({ visibility: 'visible' });            if ($('#div-node-size').length > 0) divNodeSizeRange = $('#div-node-size').detach();            if ($('#div-node-color-pickers').length > 0) divNodeColorPickers = $('#div-node-color-pickers').detach();            if ($('#div-node-color-pickers-discrete').length > 0) divNodeColorPickersDiscrete = $('#div-node-color-pickers-discrete').detach();            //var attribute = $('#select-attribute').val();            //setupNodeSizeRangeSlider(attribute); // default option            $('#select-node-size-color').val('node-default');            $('#select-attribute').prop("disabled", "disabled");            setupCrossFilter(dataSets[0].attributes);        }
     });
 
-    $('#load-example-data').button().prop("disabled", "disabled"); 
-});
+    $('#load-example-data').button().prop("disabled", "disabled");
+
+    saveObj.loadExampleData = true;
+}
 
 $('#button-apply-filter').button().click(function () {
+    applyFilterButtonOnClick();
+});
+
+function applyFilterButtonOnClick() {
     if (!dataSets[0].attributes.filteredRecords) return;
 
     var fRecords = dataSets[0].attributes.filteredRecords;
@@ -386,13 +451,15 @@ $('#button-apply-filter').button().click(function () {
     for (var i = 0; i < fRecords.length; ++i) {
         var id = fRecords[i]["index"];
         idArray.push(id);
-    } 
+    }
 
     if (apps[0]) apps[0].applyFilter(idArray);
     if (apps[1]) apps[1].applyFilter(idArray);
     if (apps[2]) apps[2].applyFilter(idArray);
     if (apps[3]) apps[3].applyFilter(idArray);
-});
+
+    saveObj.filteredRecords = dataSets[0].attributes.filteredRecords;
+}
 
 $('#button-set-node-size-color').button().click(function () {
     setNodeSizeOrColor();
@@ -427,6 +494,10 @@ function setNodeSizeOrColor() {
         if (apps[1]) apps[1].setNodeSize(newScaleArray);
         if (apps[2]) apps[2].setNodeSize(newScaleArray);
         if (apps[3]) apps[3].setNodeSize(newScaleArray);
+
+        saveObj.nodeSizeMin = minNewScale;
+        saveObj.nodeSizeMax = maxNewScale;
+        saveObj.nodeSizeAttribute = attribute;
     }
     else if (sizeOrColor == "node-color") {
         if (attribute == "module_id") {
@@ -447,6 +518,8 @@ function setNodeSizeOrColor() {
             if (apps[1]) apps[1].setNodeColorDiscrete(attribute, keyArray, colorArray);
             if (apps[2]) apps[2].setNodeColorDiscrete(attribute, keyArray, colorArray);
             if (apps[3]) apps[3].setNodeColorDiscrete(attribute, keyArray, colorArray);
+
+            saveObj.nodeColorDiscrete = colorArray.slice(0);
         }
         else {
             var minColor = $('#input-min-color').val();
@@ -459,7 +532,12 @@ function setNodeSizeOrColor() {
             if (apps[1]) apps[1].setNodeColor(attribute, minColor, maxColor);
             if (apps[2]) apps[2].setNodeColor(attribute, minColor, maxColor);
             if (apps[3]) apps[3].setNodeColor(attribute, minColor, maxColor);
+
+            saveObj.nodeColorContinuousMin = minColor;
+            saveObj.nodeColorContinuousMax = maxColor;
         }
+
+        saveObj.nodeColorAttribute = attribute;
     }
     else if (sizeOrColor == "node-default") {
         if (apps[0]) apps[0].setNodeDefaultSizeColor();
@@ -467,6 +545,8 @@ function setNodeSizeOrColor() {
         if (apps[2]) apps[2].setNodeDefaultSizeColor();
         if (apps[3]) apps[3].setNodeDefaultSizeColor();
     }
+
+    saveObj.nodeSizeOrColor = sizeOrColor;
 }
 
 function unique(sourceArray: any[]) {
@@ -480,14 +560,17 @@ function unique(sourceArray: any[]) {
 }
 
 $('#select-node-size-color').on('change', function () {
-    var value = $('#select-node-size-color').val();
+    selectNodeSizeColorOnChange();
+});
 
+function selectNodeSizeColorOnChange() {
+    var value = $('#select-node-size-color').val();
     var attribute = $('#select-attribute').val();
 
     if (value == "node-default") {
-        $('#select-attribute').prop("disabled", "disabled");   
-   
-        if ($('#div-node-size').length > 0) divNodeSizeRange = $('#div-node-size').detach();        if ($('#div-node-color-pickers').length > 0) divNodeColorPickers = $('#div-node-color-pickers').detach();        if ($('#div-node-color-pickers-discrete').length > 0) divNodeColorPickersDiscrete = $('#div-node-color-pickers-discrete').detach(); 
+        $('#select-attribute').prop("disabled", "disabled");
+
+        if ($('#div-node-size').length > 0) divNodeSizeRange = $('#div-node-size').detach();        if ($('#div-node-color-pickers').length > 0) divNodeColorPickers = $('#div-node-color-pickers').detach();        if ($('#div-node-color-pickers-discrete').length > 0) divNodeColorPickersDiscrete = $('#div-node-color-pickers-discrete').detach();
     }
     else if (value == "node-size") {
         $('#select-attribute').prop('disabled', false);
@@ -506,7 +589,7 @@ $('#select-node-size-color').on('change', function () {
     }
 
     setNodeSizeOrColor();
-});
+}
 
 $('#select-attribute').on('change', function () {
     var sizeOrColor = $('#select-node-size-color').val();
@@ -843,24 +926,38 @@ $('#dataset1-icon-front').draggable(
     {
         containment: 'body',
         stop: function (event) {
-            resetDataSet1();
-            switch (getViewUnderMouse(event.pageX, event.pageY)) {
-                case tl_view:
-                    if (apps[0]) apps[0].setDataSet(dataSets[0]);
-                    break;
-                case tr_view:
-                    if (apps[1]) apps[1].setDataSet(dataSets[0]);
-                    break;
-                case bl_view:
-                    if (apps[2]) apps[2].setDataSet(dataSets[0]);
-                    break;
-                case br_view:
-                    if (apps[3]) apps[3].setDataSet(dataSets[0]);
-                    break;
-            }
+            var view = getViewUnderMouse(event.pageX, event.pageY);
+            setDataset1(view);
         }
     }
 );
+
+function setDataset1(view: string) {
+    resetDataSet1();
+
+    var appID = -1;
+    switch (view) {
+        case tl_view:
+            if (apps[0]) apps[0].setDataSet(dataSets[0]);
+            appID = 0;
+            break;
+        case tr_view:
+            if (apps[1]) apps[1].setDataSet(dataSets[0]);
+            appID = 1;
+            break;
+        case bl_view:
+            if (apps[2]) apps[2].setDataSet(dataSets[0]);
+            appID = 2;
+            break;
+        case br_view:
+            if (apps[3]) apps[3].setDataSet(dataSets[0]);
+            appID = 3;
+            break;
+    }
+
+    saveObj.saveApps[appID].setDataSetView = view;
+}
+
 $('#dataset2-icon-front').draggable(
     {
         containment: 'body',
@@ -1092,8 +1189,12 @@ var loader = new (<any>THREE).OBJLoader(manager);
 var brainSurfaceColor: string = "0xe3e3e3";
 
 var saveObj = new SaveFile();
-initFromSaveFile();
+var loadObj: SaveFile;
 
+var divLoadingNotification = document.createElement('div');
+divLoadingNotification.id = 'div-loading-notification';
+
+initFromSaveFile();
 
 //-------------------------------------------------------------------------------------------------------------------------------------------
 // functions
@@ -1101,6 +1202,8 @@ initFromSaveFile();
 function initFromSaveFile() {
     var query = window.location.search.substring(1);
     if (query && query.length > 0) {
+        showLoadingNotification();
+
         var p = query.split("=");
         var json;
         if (p[0] == 'save') {
@@ -1109,28 +1212,152 @@ function initFromSaveFile() {
                     filename: p[1]
                 },
                 function (data, status) {
-                alert("Loading is: " + status + "\nData: " + data);
-                if (status.toLowerCase() == "success") {
-                    initApps(data);
-                }
-            });
+                    if (status.toLowerCase() == "success") {
+                        initProject(data);
+                    }
+                    else {
+                        alert("Loading is: " + status + "\nData: " + data);
+                    }
+                });
         }
     }
 }
 
-function initApps(data: string) {
+function initProject(data: string) {
     if (data == null) return;
     if (data.length == 0) return;
 
-    var save = <SaveFile>jQuery.parseJSON(data);
+    loadObj = <SaveFile>jQuery.parseJSON(data);
 
     for (var i = 0; i < 4; i++) {
-        var app = save.saveApps[i];
+        var app = loadObj.saveApps[i];
         if ((app.surfaceModel != null) && (app.surfaceModel.length > 0)) {
             // if this app exists:
+            //
             brainIconDraggableEvent(app.surfaceModel, app.view);
+
+            //
+            if (loadObj.loadExampleData == true) {
+                loadExampleData();
+            }
+
+            //
+            if ((app.setDataSetView != null) && (app.setDataSetView.length > 0)) {
+                setDataset1(app.setDataSetView);
+            }
         }
     }
+
+    setTimeout(function () { initApps() }, 3000);
+}
+
+function initApps() {
+    // init edge count
+    for (var i = 0; i < 4; i++) {
+        var app = loadObj.saveApps[i];
+        if ((app.surfaceModel != null) && (app.surfaceModel.length > 0)) {
+            apps[i].initEdgeCountSlider(app); 
+        }
+    }
+
+    // init cross filter
+    if ((loadObj.filteredRecords != null) && (loadObj.filteredRecords.length > 0)) {
+        dataSets[0].attributes.filteredRecords = loadObj.filteredRecords.slice(0);
+        applyFilterButtonOnClick();
+    }
+
+    // init show network
+    for (var i = 0; i < 4; i++) {
+        var app = loadObj.saveApps[i];
+        if ((app.surfaceModel != null) && (app.surfaceModel.length > 0)) {
+            apps[i].initShowNetwork(app);
+        }
+    }
+
+    // init the node size and color given the current UI. The UI needs to be redesigned.
+    if ((loadObj.nodeSizeOrColor != null) && (loadObj.nodeSizeOrColor.length > 0)) {
+        if (loadObj.nodeSizeOrColor == "node-size") {
+            initNodeColor();
+            initNodeSize();
+        }
+        else if (loadObj.nodeSizeOrColor == "node-color") {
+            initNodeSize();   
+            initNodeColor();
+        }
+    }
+
+    removeLoadingNotification();
+}
+
+function initNodeSize() {
+    if ((loadObj.nodeSizeAttribute != null) && (loadObj.nodeSizeAttribute.length > 0)) {
+        $('#select-node-size-color').val("node-size");
+        $('#select-attribute').val(loadObj.nodeSizeAttribute);
+        selectNodeSizeColorOnChange();
+
+        //$("#div-node-size-slider").slider("option", "values", [loadObj.nodeSizeMin, loadObj.nodeSizeMax]);
+        $("#div-node-size-slider").slider('values', 0, loadObj.nodeSizeMin); 
+        $("#div-node-size-slider").slider('values', 1, loadObj.nodeSizeMax);
+        $("#div-node-size-slider").slider({ values: [loadObj.nodeSizeMin, loadObj.nodeSizeMax] });
+        $("#label_node_size_range").text($("#div-node-size-slider").slider("values", 0) + " - " + $("#div-node-size-slider").slider("values", 1));
+
+        setNodeSizeOrColor();
+    }
+}
+
+function initNodeColor() {
+    if ((loadObj.nodeColorAttribute != null) && (loadObj.nodeColorAttribute.length > 0)) {
+        $('#select-node-size-color').val("node-color");
+        $('#select-attribute').val(loadObj.nodeColorAttribute);
+        selectNodeSizeColorOnChange();
+
+        if (loadObj.nodeColorAttribute == "module_id") {
+            var keySelection = <any>document.getElementById('select-node-key');
+
+            for (var i = 0; i < keySelection.length; i++) {
+                keySelection.options[i].style.backgroundColor = loadObj.nodeColorDiscrete[i];
+            }
+
+            (<any>document.getElementById('input-node-color')).color.fromString(loadObj.nodeColorDiscrete[0].substring(1));
+
+            setNodeSizeOrColor();
+        }
+        else {
+            (<any>document.getElementById('input-min-color')).color.fromString(loadObj.nodeColorContinuousMin.substring(1));
+            (<any>document.getElementById('input-max-color')).color.fromString(loadObj.nodeColorContinuousMax.substring(1));
+
+            setNodeSizeOrColor();
+        }
+    }
+}
+
+function showLoadingNotification() {
+    //console.log("function: cursorWait()");
+    //$('body').css({ cursor: 'wait' });
+
+    document.body.appendChild(divLoadingNotification);
+    $('#div-loading-notification').empty(); // empty this.rightClickLabel
+
+    divLoadingNotification.style.position = 'absolute';
+    divLoadingNotification.style.left = '50%';
+    divLoadingNotification.style.top = '50%';
+    divLoadingNotification.style.padding = '5px';
+    divLoadingNotification.style.borderRadius = '2px';
+    divLoadingNotification.style.zIndex = '1';
+    divLoadingNotification.style.backgroundColor = '#feeebd'; // the color of the control panel
+
+    var text = document.createElement('div');
+    text.innerHTML = "Loading...";
+    divLoadingNotification.appendChild(text);
+
+    //var button = document.createElement('button');
+    //button.textContent = "continue";
+    //divLoadingNotification.appendChild(button);
+}
+
+function removeLoadingNotification() {
+    if ($('#div-loading-notification').length > 0)
+        document.body.removeChild(divLoadingNotification);
 }
 
 // Load the brain surface (hardcoded - it is not simple to load geometry from the local machine, but this has not been deeply explored yet).

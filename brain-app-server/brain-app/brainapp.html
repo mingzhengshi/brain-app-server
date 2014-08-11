@@ -41,9 +41,20 @@
             left: 0px;
             width: 250px;
             top: 0px;
-            bottom: 0px;
+            bottom: 20px;
             overflow: hidden;
             padding: 10px;
+            font-size: 12px;
+        }
+
+        #control-panel-bottom {
+            position: absolute;
+            left: 0px;
+            width: 270px;
+            height: 19px;
+            bottom: 0px;
+            right: 0px;
+            overflow: hidden;
             font-size: 12px;
         }
 
@@ -281,10 +292,10 @@
                 </p>
                 <div id="brain3d-icon-back" class="icon"></div>
             </div>
-            <div id="div-save-app" style="margin-left: 0px; margin-bottom: 10px;">
+            <!--div id="div-save-app" style="margin-left: 0px; margin-bottom: 10px;">
                 app:
                 <button id="button-save-app" style="font-size:10px;" disabled="true">Save</button>
-            </div>
+            </div-->
             <div style="margin-left: 0px; margin-bottom: 10px;">
                 view: 
                 <input type="checkbox" id="checkbox_yoking_view" style="width: 12px;">yoking orientation
@@ -448,8 +459,11 @@
         </!--div-->
     </div>
 
-    <div id="outer-view-panel">
-        
+    <div id="control-panel-bottom">
+        <button id="button-save-app" style="font-size:10px; width: 100%; background-color: #feeebd;" disabled="true">Save</button>
+    </div>
+
+    <div id="outer-view-panel">     
         <div id="view-panel">
             <div id="view-top-left" class="view"></div>
             <div id="view-top-right" class="view"></div>

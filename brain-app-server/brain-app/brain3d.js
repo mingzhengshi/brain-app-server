@@ -48,11 +48,11 @@ var Brain3DApp = (function () {
         this.circularMouseDownEventListenerAdded = false;
         this.dissimilarityMatrix = [];
         // State
-        //showingCola: boolean = false;
+        this.showingTopologyNetwork = false;
         this.transitionInProgress = false;
         this.currentThreshold = 0;
         this.selectedNodeID = -1;
-        this.lastSliderValue = 0;
+        this.edgeCountSliderValue = 0;
         this.surfaceLoaded = false;
         this.fovZoomRatio = 1;
         this.allLables = false;
@@ -302,10 +302,6 @@ var Brain3DApp = (function () {
             varEdgesColoredOnChange();
         })).append($('<span id="weighted-edges-' + this.id + '" title="Weighted Edges" class="view-panel-span">W</span>').css({ 'right': '6px', 'top': '210px' }).click(function () {
             varEdgesThicknessByWeightedOnChange();
-        })).append($('<span id="bundling-edges-' + this.id + '" title="Edge Bundling" class="view-panel-span">&#8712</span>').css({ 'right': '6px', 'top': '230px', 'font-size': '20px' }).on("mousedown", function () {
-            varShowProcessingNotification();
-        }).on("mouseup", function () {
-            varEdgesBundlingOnChange();
         })).append($('<input id="graph-view-slider-' + this.id + '" type="range" min="0" max="100" value="100"></input>').css({ 'position': 'absolute', 'visibility': 'hidden', '-webkit-appearance': 'slider-vertical', 'width': '20px', 'height': '180px', 'right': 0, 'top': '250px', 'z-index': 1000 }).mousedown(function () {
             varSliderMouseEvent("mousedown");
         }).mouseup(function () {
@@ -452,6 +448,59 @@ var Brain3DApp = (function () {
         if (!this.loop)
             this.loop = new Loop(this, 0.03);
     }
+    Brain3DApp.prototype.save = function (app) {
+        app.edgeCount = this.edgeCountSliderValue;
+        app.showingTopologyNetwork = this.showingTopologyNetwork;
+        app.networkType = this.networkType;
+
+        app.circularBundleAttribute = this.circularBundleAttribute;
+        app.circularSortAttribute = this.circularSortAttribute;
+        app.circularLableAttribute = this.circularLableAttribute;
+        app.circularBar1Attribute = this.circularBar1Attribute;
+        app.circularBar2Attribute = this.circularBar2Attribute;
+        app.circularBar1Color = this.circularBar1Color;
+        app.circularBar2Color = this.circularBar2Color;
+        app.circularBar1Gradient = this.circularBar1Gradient;
+        app.circularBar2Gradient = this.circularBar2Gradient;
+        app.circularEdgeGradient = this.circularEdgeGradient;
+    };
+
+    Brain3DApp.prototype.initEdgeCountSlider = function (app) {
+        this.edgeCountSliderOnChange(app.edgeCount);
+        $('#edge-count-slider-' + this.id).val(app.edgeCount);
+    };
+
+    Brain3DApp.prototype.initShowNetwork = function (app) {
+        if (app.showingTopologyNetwork) {
+            $('#select-network-type-' + this.id).val(app.networkType);
+            this.networkTypeOnChange(app.networkType);
+
+            if (app.networkType == "circular-layout") {
+                $('#select-circular-layout-bundle-' + this.id).val(app.circularBundleAttribute);
+                $('#select-circular-layout-sort-' + this.id).val(app.circularSortAttribute);
+                $('#select-circular-label-' + this.id).val(app.circularLableAttribute);
+                $('#select-circular-layout-attribute-one-' + this.id).val(app.circularBar1Attribute);
+                $('#select-circular-layout-attribute-two-' + this.id).val(app.circularBar2Attribute);
+                $('#checkbox-circular-bar1-gradient-' + this.id).prop('checked', app.circularBar1Gradient);
+                $('#checkbox-circular-bar2-gradient-' + this.id).prop('checked', app.circularBar2Gradient);
+                $('#checkbox-circular-edge-gradient-' + this.id).prop('checked', app.circularEdgeGradient);
+
+                this.circularBundleAttribute = app.circularBundleAttribute;
+                this.circularSortAttribute = app.circularSortAttribute;
+                this.circularLableAttribute = app.circularLableAttribute;
+                this.circularBar1Attribute = app.circularBar1Attribute;
+                this.circularBar2Attribute = app.circularBar2Attribute;
+                this.circularBar1Color = app.circularBar1Color;
+                this.circularBar2Color = app.circularBar2Color;
+                this.circularBar1Gradient = app.circularBar1Gradient;
+                this.circularBar2Gradient = app.circularBar2Gradient;
+                this.circularEdgeGradient = app.circularEdgeGradient;
+
+                this.showNetwork(true);
+            }
+        }
+    };
+
     Brain3DApp.prototype.sliderMouseEvent = function (e) {
         if (e == "mousedown") {
             this.input.sliderEvent = true;
@@ -532,41 +581,40 @@ var Brain3DApp = (function () {
             };
 
             //------------------------------------------------------------------------
+            /*
             this.jDiv.append($('<label class=' + this.circularCSSClass + '> bundle:</label>'));
-            this.jDiv.append($('<select id="select-circular-layout-bundle-' + this.id + '" class=' + this.circularCSSClass + '></select>').css({ 'margin-left': '5px', 'font-size': '12px', 'width': '80px' }).on("change", function () {
-                varCircularLayoutBundleOnChange($(this).val());
-            }));
-
+            this.jDiv.append($('<select id="select-circular-layout-bundle-' + this.id + '" class=' + this.circularCSSClass + '></select>')
+            .css({ 'margin-left': '5px', 'font-size': '12px', 'width': '80px' })
+            .on("change", function () { varCircularLayoutBundleOnChange($(this).val()); }));
+            
             $('#select-circular-layout-bundle-' + this.id).empty();
-
+            
             var option = document.createElement('option');
             option.text = 'none';
             option.value = 'none';
             $('#select-circular-layout-bundle-' + this.id).append(option);
-
+            
             for (var i = 0; i < this.dataSet.attributes.columnNames.length; ++i) {
-                var columnName = this.dataSet.attributes.columnNames[i];
-                $('#select-circular-layout-bundle-' + this.id).append('<option value = "' + columnName + '">' + columnName + '</option>');
-            }
-
+            var columnName = this.dataSet.attributes.columnNames[i];
+            $('#select-circular-layout-bundle-' + this.id).append('<option value = "' + columnName + '">' + columnName + '</option>');            }
+            
             //------------------------------------------------------------------------
             this.jDiv.append($('<label class=' + this.circularCSSClass + '> sort:</label>'));
-            this.jDiv.append($('<select id="select-circular-layout-sort-' + this.id + '" class=' + this.circularCSSClass + '></select>').css({ 'margin-left': '5px', 'font-size': '12px', 'width': '80px' }).on("change", function () {
-                varCircularLayoutSortOnChange($(this).val());
-            }));
-
+            this.jDiv.append($('<select id="select-circular-layout-sort-' + this.id + '" class=' + this.circularCSSClass + '></select>')
+            .css({ 'margin-left': '5px', 'font-size': '12px', 'width': '80px' })
+            .on("change", function () { varCircularLayoutSortOnChange($(this).val()); }));
+            
             $('#select-circular-layout-sort-' + this.id).empty();
-
+            
             var option = document.createElement('option');
             option.text = 'none';
             option.value = 'none';
             $('#select-circular-layout-sort-' + this.id).append(option);
-
+            
             for (var i = 0; i < this.dataSet.attributes.columnNames.length; ++i) {
-                var columnName = this.dataSet.attributes.columnNames[i];
-                $('#select-circular-layout-sort-' + this.id).append('<option value = "' + columnName + '">' + columnName + '</option>');
-            }
-
+            var columnName = this.dataSet.attributes.columnNames[i];
+            $('#select-circular-layout-sort-' + this.id).append('<option value = "' + columnName + '">' + columnName + '</option>');            }
+            */
             //------------------------------------------------------------------------
             // option button
             this.jDiv.append($('<button id="button-circular-layout-histogram-' + this.id + '" class=' + this.circularCSSClass + '>options</button>').css({ 'margin-left': '5px', 'font-size': '12px' }).click(function () {
@@ -583,6 +631,44 @@ var Brain3DApp = (function () {
             //------------------------------------------------------------------------
             // menu
             this.jDiv.append($('<div id="div-circular-layout-menu-' + this.id + '" class=' + this.circularCSSClass + '></div>').css({ 'display': 'none', 'background-color': '#feeebd', 'position': 'absolute', 'padding': '8px', 'border-radius': '5px' }));
+
+            //------------------------------------------------------------------------
+            // menu - bundle
+            $('#div-circular-layout-menu-' + this.id).append('<div id="div-circular-bundle-' + this.id + '">bundle: </div>');
+            $('#div-circular-bundle-' + this.id).append($('<select id="select-circular-layout-bundle-' + this.id + '" class=' + this.circularCSSClass + '></select>').css({ 'margin-left': '5px', 'margin-bottom': '5px', 'font-size': '12px', 'width': '80px', 'background-color': '#feeebd' }).on("change", function () {
+                varCircularLayoutBundleOnChange($(this).val());
+            }));
+
+            $('#select-circular-layout-bundle-' + this.id).empty();
+
+            var option = document.createElement('option');
+            option.text = 'none';
+            option.value = 'none';
+            $('#select-circular-layout-bundle-' + this.id).append(option);
+
+            for (var i = 0; i < this.dataSet.attributes.columnNames.length; ++i) {
+                var columnName = this.dataSet.attributes.columnNames[i];
+                $('#select-circular-layout-bundle-' + this.id).append('<option value = "' + columnName + '">' + columnName + '</option>');
+            }
+
+            //------------------------------------------------------------------------
+            // menu - sort
+            $('#div-circular-layout-menu-' + this.id).append('<div id="div-circular-sort-' + this.id + '">sort: </div>');
+            $('#div-circular-sort-' + this.id).append($('<select id="select-circular-layout-sort-' + this.id + '" class=' + this.circularCSSClass + '></select>').css({ 'margin-left': '5px', 'margin-bottom': '5px', 'font-size': '12px', 'width': '80px', 'background-color': '#feeebd' }).on("change", function () {
+                varCircularLayoutSortOnChange($(this).val());
+            }));
+
+            $('#select-circular-layout-sort-' + this.id).empty();
+
+            var option = document.createElement('option');
+            option.text = 'none';
+            option.value = 'none';
+            $('#select-circular-layout-sort-' + this.id).append(option);
+
+            for (var i = 0; i < this.dataSet.attributes.columnNames.length; ++i) {
+                var columnName = this.dataSet.attributes.columnNames[i];
+                $('#select-circular-layout-sort-' + this.id).append('<option value = "' + columnName + '">' + columnName + '</option>');
+            }
 
             //------------------------------------------------------------------------
             // menu - label
@@ -847,27 +933,23 @@ var Brain3DApp = (function () {
 
         if ($('#span-circular-layout-bar1-color-picker').length > 0)
             this.commonData.circularBar1ColorPicker = $('#span-circular-layout-bar1-color-picker').detach();
-
-        //$(this.commonData.circularBar1ColorPicker).appendTo('#div-circular-bar1-' + this.id);
         $(this.commonData.circularBar1ColorPicker).insertAfter('#select-circular-layout-attribute-one-' + this.id);
 
         if ($('#span-circular-layout-bar2-color-picker').length > 0)
             this.commonData.circularBar2ColorPicker = $('#span-circular-layout-bar2-color-picker').detach();
-
-        //$(this.commonData.circularBar2ColorPicker).appendTo('#div-circular-bar2-' + this.id);
         $(this.commonData.circularBar2ColorPicker).insertAfter('#select-circular-layout-attribute-two-' + this.id);
 
         document.getElementById('input-circular-layout-bar1-color').color.fromString(this.circularBar1Color);
         document.getElementById('input-circular-layout-bar2-color').color.fromString(this.circularBar2Color);
 
         $('#div-circular-layout-menu-' + this.id).zIndex(1000);
-
-        //$('#div-circular-layout-menu-0').css({ left: l, top: t, height: 'auto', display: 'inline' });
         $('#div-circular-layout-menu-' + this.id).css({ left: l, top: t, height: 'auto' });
         $('#div-circular-layout-menu-' + this.id).fadeToggle('fast');
     };
 
     Brain3DApp.prototype.circularLayoutLabelOnChange = function (attr) {
+        this.circularLableAttribute = attr;
+
         if (attr == "default") {
             this.svgAllElements.selectAll(".nodeCircular").text(function (d) {
                 return d.key;
@@ -880,6 +962,8 @@ var Brain3DApp = (function () {
     };
 
     Brain3DApp.prototype.circularLayoutAttributeOneOnChange = function (attr) {
+        this.circularBar1Attribute = attr;
+
         if (attr == "none") {
             this.svgAllElements.selectAll(".rect1Circular").attr("width", function (d) {
                 d.bar1_width = 0;
@@ -927,6 +1011,8 @@ var Brain3DApp = (function () {
     };
 
     Brain3DApp.prototype.circularLayoutAttributeTwoOnChange = function (attr) {
+        this.circularBar2Attribute = attr;
+
         if (attr == "none") {
             this.svgAllElements.selectAll(".rect2Circular").attr("width", function (d) {
                 d.bar2_width = 0;
@@ -959,10 +1045,12 @@ var Brain3DApp = (function () {
     };
 
     Brain3DApp.prototype.circularLayoutSortOnChange = function (attr) {
+        this.circularSortAttribute = $('#select-circular-layout-sort-' + this.id).val();
         this.showNetwork(true);
     };
 
     Brain3DApp.prototype.circularLayoutBundleOnChange = function (attr) {
+        this.circularBundleAttribute = $('#select-circular-layout-bundle-' + this.id).val();
         this.showNetwork(true);
     };
 
@@ -1003,9 +1091,9 @@ var Brain3DApp = (function () {
     };
 
     Brain3DApp.prototype.edgeCountSliderOnChange = function (numEdges) {
-        if (numEdges == this.lastSliderValue)
+        if (numEdges == this.edgeCountSliderValue)
             return;
-        this.lastSliderValue = numEdges;
+        this.edgeCountSliderValue = numEdges;
 
         if (this.bundlingEdges)
             this.edgesBundlingOnChange(); // turn off edge bundling
@@ -1164,6 +1252,8 @@ var Brain3DApp = (function () {
         var _this = this;
         if (!this.brainObject || !this.colaObject || !this.physioGraph || !this.colaGraph)
             return;
+
+        this.showingTopologyNetwork = true;
 
         if (this.bundlingEdges)
             this.edgesBundlingOnChange(); // turn off edge bundling

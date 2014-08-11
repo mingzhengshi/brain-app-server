@@ -11,11 +11,20 @@ namespace brain_app_server.brain_app
     {
         protected void Page_Load(object sender, EventArgs e)
         {
+            string ip = Request.UserHostAddress;
             string guid = Guid.NewGuid().ToString();
+            if ((ip != null) && (!ip.Contains("::"))) guid += ("_" + ip);
 
             string saveString = Request.Form["save"];
             string path = Server.MapPath("save") + "\\" + guid +".txt";
-            System.IO.File.WriteAllText(path, saveString);
+
+            try
+            {
+                System.IO.File.WriteAllText(path, saveString);
+            }
+            catch
+            {
+            }
 
             Response.Write(guid);
         }

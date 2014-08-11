@@ -13,6 +13,7 @@ namespace brain_app_server.brain_app
         {
             string filename = Request.Form["filename"];
             string path = Server.MapPath("save") + "\\" + filename + ".txt";
+
             string json = "";
             try
             {
@@ -21,6 +22,7 @@ namespace brain_app_server.brain_app
             catch
             {
             }
+
             Response.Write(json);
         }
     }
