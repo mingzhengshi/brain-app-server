@@ -3,4 +3,3 @@ C:\Users\Mingzheng\Documents\GitHub\brain-app-server\brain-app-server\bin\brain-
 C:\Users\Mingzheng\Documents\GitHub\brain-app-server\brain-app-server\bin\brain-app-server.pdb
 C:\Users\Mingzheng\Documents\GitHub\brain-app-server\brain-app-server\obj\Debug\brain-app-server.dll
 C:\Users\Mingzheng\Documents\GitHub\brain-app-server\brain-app-server\obj\Debug\brain-app-server.pdb
-C:\Users\Mingzheng\Documents\GitHub\brain-app-server\brain-app-server\obj\Debug\brain-app-server.csprojResolveAssemblyReference.cache

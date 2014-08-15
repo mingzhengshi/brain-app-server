@@ -89,6 +89,12 @@ class SaveFile {
     // brain apps
     saveApps: SaveApp[];
 
+    // user-uploaded file names
+    serverFileNameCoord: string;
+    serverFileNameMatrix: string;
+    serverFileNameAttr: string;
+    serverFileNameLabel: string;
+
     constructor() {
         this.saveApps = new Array(4);
         for (var i = 0; i < 4; i++) {
@@ -385,36 +391,19 @@ $("#div-load-data-options").click(function () {
     }
 });
 
-var fileCoords;
-// Set up data upload buttons
+var TYPE_COORD: string = "coordinates";
+var TYPE_MATRIX: string = "matrix";
+var TYPE_ATTR: string = "attributes";
+var TYPE_LABEL: string = "labels";
+
 $('#select-coords').button();
-$('#select-coords').change(function () {
-    fileCoords = this.files[0];
-});
-
 $('#upload-coords').button().click(function () {
-    // 1. upload the file to server
-    //var formData = new FormData($('#form-coords')[0]);
-    var formData = new FormData();
-    formData.append("file", fileCoords);
-
-    $.ajax({
-        url: 'upload.aspx',
-        type: 'POST',
-        data: formData,
-        processData: false, // setting processData to false lets you prevent jQuery from automatically transforming the data into a query string
-        contentType: false, // required
-        success: function (data) {
-            alert(data);
-        }
-    });
-
-
-
-
-    // 2. also load data locally
     var file = (<any>$('#select-coords').get(0)).files[0];
     if (file) {
+        // 1. upload the file to server
+        uploadTextFile(file, TYPE_COORD);
+
+        // 2. also load data locally
         loadCoordinates(file);
         //$('#shared-coords').css({ color: 'green' });
         $('#label-coords')
@@ -422,10 +411,13 @@ $('#upload-coords').button().click(function () {
             .css({ color: 'green' });
     }
 });
+
 $('#select-matrix-1').button();
 $('#upload-matrix-1').button().click(function () {
     var file = (<any>$('#select-matrix-1').get(0)).files[0];
     if (file) {
+        uploadTextFile(file, TYPE_MATRIX);
+
         loadSimilarityMatrix(file, dataSets[0]);
         //$('#d1-mat').css({color: 'green'});
         $('#label-similarity-matrix')
@@ -433,10 +425,13 @@ $('#upload-matrix-1').button().click(function () {
             .css({ color: 'green' });
     }
 });
+
 $('#select-attr-1').button();
 $('#upload-attr-1').button().click(function () {
     var file = (<any>$('#select-attr-1').get(0)).files[0];
     if (file) {
+        uploadTextFile(file, TYPE_ATTR);
+
         loadAttributes(file, dataSets[0]);
         //$('#d1-att').css({ color: 'green' });
         $('#label-attributes')
@@ -446,10 +441,15 @@ $('#upload-attr-1').button().click(function () {
         setupAttributeTab();
     }
 });
+
 $('#select-labels').button();
 $('#upload-labels').button().click(function () {
     var file = (<any>$('#select-labels').get(0)).files[0];
     if (file) {
+        // 1. upload the file to server
+        uploadTextFile(file, TYPE_LABEL);
+
+        // 2. also load data locally
         loadLabels(file);
         //$('#shared-labels').css({ color: 'green' });
         $('#label-labels')
@@ -457,6 +457,39 @@ $('#upload-labels').button().click(function () {
             .css({ color: 'green' });
     }
 });
+
+function uploadTextFile(file, fileType: string) {
+    var reader = new FileReader();
+
+    reader.onload = function () {
+        $.post("upload.aspx",
+            {
+                fileText: reader.result,
+                type: fileType
+            },
+            function (data, status) {
+                if (status.toLowerCase() == "success") {
+                    if (fileType == TYPE_COORD) {
+                        saveObj.serverFileNameCoord = data;
+                    }
+                    else if (fileType == TYPE_MATRIX) {
+                        saveObj.serverFileNameMatrix = data;
+                    }
+                    else if (fileType == TYPE_ATTR) {
+                        saveObj.serverFileNameAttr = data;
+                    }
+                    else if (fileType == TYPE_LABEL) {
+                        saveObj.serverFileNameLabel = data;
+                    }
+                }
+                else {
+                    //alert("Loading is: " + status + "\nData: " + data);
+                }
+            });
+    }
+
+    reader.readAsText(file);
+}
 
 /*
 $('#select-matrix-2').button();
