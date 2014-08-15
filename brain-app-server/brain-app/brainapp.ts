@@ -315,67 +315,14 @@ $('#control-panel').tabs({
         if (ui.newPanel[0].id == 'tab-2') {
             // Reset data set icon positions
             resetDataSet1();
-            resetDataSet2();
+            //resetDataSet2();
             $('#dataset1-icon-front').show();
-            $('#dataset2-icon-front').show();
+            //$('#dataset2-icon-front').show();
         }
         else {
             $('#dataset1-icon-front').hide();
-            $('#dataset2-icon-front').hide();
+            //$('#dataset2-icon-front').hide();
         }
-    }
-});
-
-//$('#accordion').accordion({ heightStyle: 'fill' });
-$('#accordion').accordion({ heightStyle: 'content' });
-
-// Set up data upload buttons
-$('#select-coords').button();
-$('#upload-coords').button().click(function () {
-    var file = (<any>$('#select-coords').get(0)).files[0];
-    if (file) {
-        loadCoordinates(file);
-        $('#shared-coords').css({ color: 'green' });
-    }
-});
-$('#select-labels').button();
-$('#upload-labels').button().click(function () {
-    var file = (<any>$('#select-labels').get(0)).files[0];
-    if (file) {
-        loadLabels(file);
-        $('#shared-labels').css({ color: 'green' });
-    }
-});
-$('#select-matrix-1').button();
-$('#upload-matrix-1').button().click(function () {
-    var file = (<any>$('#select-matrix-1').get(0)).files[0];
-    if (file) {
-        loadSimilarityMatrix(file, dataSets[0]);
-        $('#d1-mat').css({color: 'green'});
-    }
-});
-$('#select-attr-1').button();
-$('#upload-attr-1').button().click(function () {
-    var file = (<any>$('#select-attr-1').get(0)).files[0];
-    if (file) {
-        loadAttributes(file, dataSets[0]);
-        $('#d1-att').css({ color: 'green' });
-    }
-});
-$('#select-matrix-2').button();
-$('#upload-matrix-2').button().click(function () {
-    var file = (<any>$('#select-matrix-2').get(0)).files[0];
-    if (file) {
-        loadSimilarityMatrix(file, dataSets[1]);
-        $('#d2-mat').css({ color: 'green' });
-    }
-});
-$('#select-attr-2').button();
-$('#upload-attr-2 ').button().click(function () {
-    var file =(<any> $('#select-attr-2').get(0)).files[0]
-    if (file) {
-        loadAttributes(file, dataSets[1]);
-        $('#d2-att').css({ color: 'green' });
     }
 });
 
@@ -392,7 +339,7 @@ $('#button-save-app').button().click(function () {
         },
         function (data, status) {
             if (status.toLowerCase() == "success") {
-                var url = document.URL.split('?')[0];              
+                var url = document.URL.split('?')[0];
                 prompt("The project is saved. Use the following URL to restore the project:", url + "?save=" + data);
             }
             else {
@@ -400,6 +347,135 @@ $('#button-save-app').button().click(function () {
             }
         });
 });
+
+//$('#accordion').accordion({ heightStyle: 'fill' });
+//$('#accordion').accordion({ heightStyle: 'content' });
+
+$("#div-load-data-options").buttonset();
+$("#div-load-data-options").click(function () {
+    if ($("#radio-load-default-data").is(":checked")) {
+        $('#load-example-data').button({ disabled: false });
+
+        $('#select-coords').button({ disabled: true });
+        $('#upload-coords').button({ disabled: true });
+
+        $('#select-matrix-1').button({ disabled: true });
+        $('#upload-matrix-1').button({ disabled: true });
+
+        $('#select-attr-1').button({ disabled: true });
+        $('#upload-attr-1').button({ disabled: true });
+
+        $('#select-labels').button({ disabled: true });
+        $('#upload-labels').button({ disabled: true });
+    }
+    else if ($("#radio-upload-data").is(":checked")) {
+        $('#load-example-data').button({ disabled: true });
+
+        $('#select-coords').button({ disabled: false });
+        $('#upload-coords').button({ disabled: false });
+
+        $('#select-matrix-1').button({ disabled: false });
+        $('#upload-matrix-1').button({ disabled: false });
+
+        $('#select-attr-1').button({ disabled: false });
+        $('#upload-attr-1').button({ disabled: false });
+
+        $('#select-labels').button({ disabled: false });
+        $('#upload-labels').button({ disabled: false });
+    }
+});
+
+var fileCoords;
+// Set up data upload buttons
+$('#select-coords').button();
+$('#select-coords').change(function () {
+    fileCoords = this.files[0];
+});
+
+$('#upload-coords').button().click(function () {
+    // 1. upload the file to server
+    //var formData = new FormData($('#form-coords')[0]);
+    var formData = new FormData();
+    formData.append("file", fileCoords);
+
+    $.ajax({
+        url: 'upload.aspx',
+        type: 'POST',
+        data: formData,
+        processData: false, // setting processData to false lets you prevent jQuery from automatically transforming the data into a query string
+        contentType: false, // required
+        success: function (data) {
+            alert(data);
+        }
+    });
+
+
+
+
+    // 2. also load data locally
+    var file = (<any>$('#select-coords').get(0)).files[0];
+    if (file) {
+        loadCoordinates(file);
+        //$('#shared-coords').css({ color: 'green' });
+        $('#label-coords')
+            .text("uploaded")
+            .css({ color: 'green' });
+    }
+});
+$('#select-matrix-1').button();
+$('#upload-matrix-1').button().click(function () {
+    var file = (<any>$('#select-matrix-1').get(0)).files[0];
+    if (file) {
+        loadSimilarityMatrix(file, dataSets[0]);
+        //$('#d1-mat').css({color: 'green'});
+        $('#label-similarity-matrix')
+            .text("uploaded")
+            .css({ color: 'green' });
+    }
+});
+$('#select-attr-1').button();
+$('#upload-attr-1').button().click(function () {
+    var file = (<any>$('#select-attr-1').get(0)).files[0];
+    if (file) {
+        loadAttributes(file, dataSets[0]);
+        //$('#d1-att').css({ color: 'green' });
+        $('#label-attributes')
+            .text("uploaded")
+            .css({ color: 'green' });
+
+        setupAttributeTab();
+    }
+});
+$('#select-labels').button();
+$('#upload-labels').button().click(function () {
+    var file = (<any>$('#select-labels').get(0)).files[0];
+    if (file) {
+        loadLabels(file);
+        //$('#shared-labels').css({ color: 'green' });
+        $('#label-labels')
+            .text("uploaded")
+            .css({ color: 'green' });
+    }
+});
+
+/*
+$('#select-matrix-2').button();
+$('#upload-matrix-2').button().click(function () {
+    var file = (<any>$('#select-matrix-2').get(0)).files[0];
+    if (file) {
+        loadSimilarityMatrix(file, dataSets[1]);
+        $('#d2-mat').css({ color: 'green' });
+    }
+});
+$('#select-attr-2').button();
+$('#upload-attr-2 ').button().click(function () {
+    var file =(<any> $('#select-attr-2').get(0)).files[0]
+    if (file) {
+        loadAttributes(file, dataSets[1]);
+        $('#d2-att').css({ color: 'green' });
+    }
+});
+*/
 
 var divNodeSizeRange;
 var divNodeColorPickers;
@@ -412,25 +488,33 @@ $('#load-example-data').button().click(function () {
 function loadExampleData() {
     $.get('data/coords.txt', function (text) {
         parseCoordinates(text);
-        $('#shared-coords').css({ color: 'green' });
-    });
-    $.get('data/labels.txt', function (text) {
-        parseLabels(text);
-        $('#shared-labels').css({ color: 'green' });
+        //$('#shared-coords').css({ color: 'green' });
+        $('#label-coords')
+            .text("default data")
+            .css({ color: 'green' });
     });
     $.get('data/mat1.txt', function (text) {
         parseSimilarityMatrix(text, dataSets[0]);
-        $('#d1-mat').css({ color: 'green' });
+        //$('#d1-mat').css({ color: 'green' });
+        $('#label-similarity-matrix')
+            .text("default data")
+            .css({ color: 'green' });
     });
     $.get('data/attributes1.txt', function (text) {
         parseAttributes(text, dataSets[0]);
-        $('#d1-att').css({ color: 'green' });
+        //$('#d1-att').css({ color: 'green' });
+        $('#label-attributes')
+            .text("default data")
+            .css({ color: 'green' });
 
-        if (dataSets[0].attributes) {
-            $('#select-attribute').empty();
-            for (var i = 0; i < dataSets[0].attributes.columnNames.length; ++i) {
-                var columnName = dataSets[0].attributes.columnNames[i];
-                $('#select-attribute').append('<option value = "' + columnName + '">' + columnName + '</option>');            }            $('#div-set-node-scale').css({ visibility: 'visible' });            $('#div-node-size').css({ visibility: 'visible' });            $('#div-node-color-pickers').css({ visibility: 'visible' });            $('#div-node-color-pickers-discrete').css({ visibility: 'visible' });            if ($('#div-node-size').length > 0) divNodeSizeRange = $('#div-node-size').detach();            if ($('#div-node-color-pickers').length > 0) divNodeColorPickers = $('#div-node-color-pickers').detach();            if ($('#div-node-color-pickers-discrete').length > 0) divNodeColorPickersDiscrete = $('#div-node-color-pickers-discrete').detach();            //var attribute = $('#select-attribute').val();            //setupNodeSizeRangeSlider(attribute); // default option            $('#select-node-size-color').val('node-default');            $('#select-attribute').prop("disabled", "disabled");            setupCrossFilter(dataSets[0].attributes);        }
+        setupAttributeTab();
+    });
+    $.get('data/labels.txt', function (text) {
+        parseLabels(text);
+        //$('#shared-labels').css({ color: 'green' });
+        $('#label-labels')
+            .text("default data")
+            .css({ color: 'green' });
     });
 
     $('#load-example-data').button().prop("disabled", "disabled");
@@ -441,6 +525,14 @@ function loadExampleData() {
 $('#button-apply-filter').button().click(function () {
     applyFilterButtonOnClick();
 });
+
+function setupAttributeTab() {
+    if (dataSets[0].attributes) {
+        $('#select-attribute').empty();
+        for (var i = 0; i < dataSets[0].attributes.columnNames.length; ++i) {
+            var columnName = dataSets[0].attributes.columnNames[i];
+            $('#select-attribute').append('<option value = "' + columnName + '">' + columnName + '</option>');        }        $('#div-set-node-scale').css({ visibility: 'visible' });        $('#div-node-size').css({ visibility: 'visible' });        $('#div-node-color-pickers').css({ visibility: 'visible' });        $('#div-node-color-pickers-discrete').css({ visibility: 'visible' });        if ($('#div-node-size').length > 0) divNodeSizeRange = $('#div-node-size').detach();        if ($('#div-node-color-pickers').length > 0) divNodeColorPickers = $('#div-node-color-pickers').detach();        if ($('#div-node-color-pickers-discrete').length > 0) divNodeColorPickersDiscrete = $('#div-node-color-pickers-discrete').detach();        $('#select-node-size-color').val('node-default');        $('#select-attribute').prop("disabled", "disabled");        setupCrossFilter(dataSets[0].attributes);    }
+}
 
 function applyFilterButtonOnClick() {
     if (!dataSets[0].attributes.filteredRecords) return;
@@ -955,9 +1047,12 @@ function setDataset1(view: string) {
             break;
     }
 
-    saveObj.saveApps[appID].setDataSetView = view;
+    if (appID != -1) {
+        saveObj.saveApps[appID].setDataSetView = view;
+    }
 }
 
+/*
 $('#dataset2-icon-front').draggable(
     {
         containment: 'body',
@@ -980,6 +1075,7 @@ $('#dataset2-icon-front').draggable(
         }
     }
 );
+*/
 
 $('#checkbox_yoking_view').on('change', function () {
     if ($('#checkbox_yoking_view').is(":checked")) {
@@ -1000,11 +1096,11 @@ function resetIcon(object: string, location: string) {
 
 var resetBrain3D = resetIcon('#brain3d-icon-front', '#brain3d-icon-back');
 var resetDataSet1 = resetIcon('#dataset1-icon-front', '#dataset1-icon-back');
-var resetDataSet2 = resetIcon('#dataset2-icon-front', '#dataset2-icon-back');
+//var resetDataSet2 = resetIcon('#dataset2-icon-front', '#dataset2-icon-back');
 
 // Data set icons are visible when the page loads - reset them immediately
 resetDataSet1();
-resetDataSet2();
+//resetDataSet2();
 
 var visIcons = [$('#brain3d-icon-front')];
 
@@ -1025,7 +1121,7 @@ function hideVisIcons() {
 resetBrain3D();
 showVisIcons();
 $('#dataset1-icon-front').hide();
-$('#dataset2-icon-front').hide();
+//$('#dataset2-icon-front').hide();
 
 var apps = Array<Application>(new DummyApp(), new DummyApp(), new DummyApp(), new DummyApp());
 

@@ -31,9 +31,10 @@
         }
 
         h3 {
-            font-size: 14px;
+            font-size: 12px;
             font-weight: bold;
             line-height: normal;
+            margin-bottom: 5px;
         }
 
         #control-panel {
@@ -98,6 +99,12 @@
             bottom: 0px;
             right: 0px;
             background-color: #d2ffbd;
+        }
+
+        .h3-span {
+            font-size: 12px;
+            font-weight: bold;
+            margin-bottom: 10px;
         }
 
         .view {
@@ -307,7 +314,39 @@
             </div>
         </div>
         <div id="tab-2" class="tab">
-            <div id="accordion">
+            <div id="div-load-data-options">
+                <input type="radio" id="radio-load-default-data" name="radio" style="width: 120px" checked="checked"><label for="radio-load-default-data" style="width: 120px; font-size:10px;">Default Data</label>
+                <input type="radio" id="radio-upload-data" name="radio" style="width: 120px"><label for="radio-upload-data" style="width:120px; font-size:10px;">Upload Data</label>
+            </div>
+            <br />
+            <button id="load-example-data" style="font-size:10px;">Load Default Data</button>
+            <br />
+            <br />
+            <span class="h3-span">Coordinates: </span><span id="label-coords">empty</span>
+            <form id="form-coords" enctype="multipart/form-data">
+                <input id="select-coords" style="font-size:10px; width: 160px; margin-top: 5px;" type="file" disabled="disabled" />
+                <button id="upload-coords" style="font-size:10px;" disabled="disabled">Upload</button>
+            </form>
+            <!--input id="select-coords" style="font-size:10px; width: 160px; margin-top: 5px;" type="file" disabled="disabled" />
+            <button id="upload-coords" style="font-size:10px;" disabled="disabled">Upload</button-->
+            <br />
+            <span class="h3-span">Similarity Matrix: </span><span id="label-similarity-matrix">empty</span>
+            <input id="select-matrix-1" style="font-size:10px; width: 160px; margin-top: 5px;" type="file" disabled="disabled" />
+            <button id="upload-matrix-1" style="font-size:10px;" disabled="disabled">Upload</button>
+            <br />
+            <br />
+            <span class="h3-span">Attributes: </span><span id="label-attributes">empty</span>
+            <input id="select-attr-1" style="font-size:10px; width: 160px; margin-top: 5px;" type="file" disabled="disabled" />
+            <button id="upload-attr-1" style="font-size:10px;" disabled="disabled">Upload</button>
+            <br />
+            <br />
+            <span class="h3-span">Labels (optional): </span><span id="label-labels">empty</span>
+            <input id="select-labels" style="font-size:10px; width: 160px; margin-top: 5px;" type="file" disabled="disabled" />
+            <button id="upload-labels" style="font-size:10px;" disabled="disabled">Upload</button>
+            <br />
+            <br />
+
+            <!--div id="accordion">
                 <h2>Shared Data</h2>
                 <div class="fold">
                     <h3>Coordinates</h3>
@@ -316,11 +355,6 @@
                     <h3>Labels</h3>
                     <input id="select-labels" type="file" />
                     <button id="upload-labels">Upload</button>
-                    <!--
-                    <h3>Surface (Hardcoded)</h3>
-                    <input id="select-surface" type="file" />
-                    <button id="upload-surface">Upload</button>
-                    -->
                     <br />
                     <br />
                 </div>
@@ -346,9 +380,13 @@
                     <br />
                     <br />
                 </div>
+            </div-->
+            <br />
+            <br />
+            <div class="dataset-info">
+                <div id="dataset1-icon-back" class="icon"></div>
             </div>
-            <button id="load-example-data">Load Example Data</button>
-            <h2>Shared Data</h2>
+            <!--h2>Shared Data</h2>
             <p id="shared-coords" class="dataset-component">Coordinates</p>
             <p id="shared-labels" class="dataset-component">Labels</p>
             <br />
@@ -361,7 +399,7 @@
                 <div id="dataset2-icon-back" class="icon"></div>
                 <p id="d2-mat" class="dataset-component">Similarity Matrix</p>
                 <p id="d2-att" class="dataset-component">Attributes</p>
-            </div>
+            </div-->
         </div>
         <div id="tab-3" class="tab" style="height: 95%; overflow-x: hidden; overflow-y: auto;">
             <div id="barCharts"></div>
@@ -429,34 +467,6 @@
                 </p>
             </div>
         </div>
-        <!--div id="tab-4" class="tab">
-            <h3>How to use this application</h3>
-            <p>
-                In the data tab, select the data files from the local machine. In the visualisation tab,
-                you can drag one of the available visualisations into any of the four views. The visualisation
-                won't display until you drag one of the data sets (the blue boxes in the data tab) into the view as well.
-                All the necessary data for a visualisation must have been loaded, or else it will not be
-                displayed.
-            </p>
-            <p>
-                To resize the views, drag the black pin around.
-            </p>
-            <p>
-                To direct keyboard / Leap input to a particular view, you must select it with the mouse.
-                The currently-selected view has a black border around it.
-            </p>
-            <br />
-            <h3>"Brain 3D" application controls</h3>
-            <p>
-                Drag the slider to select the number of edges you want in the thresholded graph. Then press space
-                to view the graph. You can rotate the view with the WASD keys, and moving the mouse over a node will
-                enlarge that node in both graphs.
-            </p>
-            <p>
-                There is very limited Leap Motion support available. You can pan your hand around to rotate the view,
-                and you can point at a node to enlarge it.
-            </p>
-        </!--div-->
     </div>
 
     <div id="control-panel-bottom">
@@ -477,7 +487,7 @@
 
     <!-- Draggable icons -->
     <div id="dataset1-icon-front" class="icon icon-front">Data Set 1</div>
-    <div id="dataset2-icon-front" class="icon icon-front">Data Set 2</div>
+    <!--div id="dataset2-icon-front" class="icon icon-front">Data Set 2</div-->
     <div id="brain3d-icon-front" class="icon icon-front">3D Brain</div>
 
     <div id="div-context-menu-color-picker" style="visibility:hidden;">
