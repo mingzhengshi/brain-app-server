@@ -2460,7 +2460,7 @@ var Brain3DApp = (function () {
         }
 
         // Set up the node colourings
-        this.nodeColourings = this.dataSet.attributes.get('module_id').map(function (group) {
+        this.nodeColourings = this.dataSet.attributes.attrValues[0].map(function (group) {
             //var str = this.d3ColorSelector(group).replace("#", "0x");
             //return parseInt(str);
             return 0xd3d3d3;

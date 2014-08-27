@@ -142,7 +142,14 @@ class Attributes {
     filteredRecordsHighlightChanged: boolean = false;
 
     constructor(text: string) {
-        var lines = text.split(String.fromCharCode(13)); // Lines delimited by carriage returns...
+        //var lines = text.split(String.fromCharCode(13)); // Lines delimited by carriage returns...
+        var lines = text.split(/\r\n|\r|\n/g).map(function (s) { return s.trim() });
+        // check the last line:
+        var lastline = lines[lines.length - 1].trim();
+        if (lastline.length == 0) {
+            lines.splice(lines.length - 1, 1);
+        }
+
         this.numRecords = lines.length - 1;
         this.columnNames = lines[0].split('\t');
         var numAttributes = this.columnNames.length;
@@ -416,8 +423,10 @@ $('#select-matrix-1').button();
 $('#upload-matrix-1').button().click(function () {
     var file = (<any>$('#select-matrix-1').get(0)).files[0];
     if (file) {
+        // 1. upload the file to server
         uploadTextFile(file, TYPE_MATRIX);
 
+        // 2. also load data locally
         loadSimilarityMatrix(file, dataSets[0]);
         //$('#d1-mat').css({color: 'green'});
         $('#label-similarity-matrix')
@@ -430,15 +439,22 @@ $('#select-attr-1').button();
 $('#upload-attr-1').button().click(function () {
     var file = (<any>$('#select-attr-1').get(0)).files[0];
     if (file) {
+        // 1. upload the file to server
         uploadTextFile(file, TYPE_ATTR);
 
-        loadAttributes(file, dataSets[0]);
-        //$('#d1-att').css({ color: 'green' });
-        $('#label-attributes')
-            .text("uploaded")
-            .css({ color: 'green' });
+        // 2. also load data locally
+        //loadAttributes(file, dataSets[0]);
+        var reader = new FileReader();
+        reader.onload = function () {
+            parseAttributes(reader.result, dataSets[0]);
 
-        setupAttributeTab();
+            $('#label-attributes')
+                .text("uploaded")
+                .css({ color: 'green' });
+
+            setupAttributeTab();
+        }
+        reader.readAsText(file);
     }
 });
 
@@ -490,25 +506,6 @@ function uploadTextFile(file, fileType: string) {
 
     reader.readAsText(file);
 }
-
-/*
-$('#select-matrix-2').button();
-$('#upload-matrix-2').button().click(function () {
-    var file = (<any>$('#select-matrix-2').get(0)).files[0];
-    if (file) {
-        loadSimilarityMatrix(file, dataSets[1]);
-        $('#d2-mat').css({ color: 'green' });
-    }
-});
-$('#select-attr-2').button();
-$('#upload-attr-2 ').button().click(function () {
-    var file =(<any> $('#select-attr-2').get(0)).files[0]
-    if (file) {
-        loadAttributes(file, dataSets[1]);
-        $('#d2-att').css({ color: 'green' });
-    }
-});
-*/
 
 var divNodeSizeRange;
 var divNodeColorPickers;
@@ -1281,8 +1278,16 @@ function loadCoordinates(file) {
 
 function parseCoordinates(text: string) {
     // For some reason the text file uses a carriage return to separate coordinates (ARGGgggh!!!!)
-    var lines = text.split(String.fromCharCode(13));
+    //var lines = text.split(String.fromCharCode(13));
+    var lines = text.split(/\r\n|\r|\n/g).map(function (s) { return s.trim() });
+    // check the last line:
+    var lastline = lines[lines.length - 1].trim();
+    if (lastline.length == 0) {
+        lines.splice(lines.length - 1, 1);
+    }
+
     var len = lines.length - 1; // First line is just labels
+
     commonData.brainCoords = [Array(len), Array(len), Array(len)];
     commonData.nodeCount = len;
     for (var i = 0; i < len; ++i) {
@@ -1549,7 +1554,8 @@ function loadSimilarityMatrix(file, dataSet: DataSet) {
 }
 
 function parseSimilarityMatrix(text: string, dataSet: DataSet) {
-    var lines = text.split('\n').map(function (s) { return s.trim() });
+    //var lines = text.split('\n').map(function (s) { return s.trim() });
+    var lines = text.split(/\r\n|\r|\n/g).map(function (s) { return s.trim() });
     dataSet.simMatrix = [];
     lines.forEach((line, i) => {
         if (line.length > 0) {
@@ -1644,6 +1650,21 @@ function setupCrossFilter(attrs: Attributes) {
         dimArray.push(dim);
         var group = dim.group().reduceCount(function (d) { return d[columnName]; });
 
+        chart
+            .gap(5)
+            .width(290)
+            .height(150)
+            .dimension(dim)
+            .group(group)
+            .x(d3.scale.linear().domain([minValue, maxValue]))
+            .xAxisLabel(columnName)
+            .xUnits(function () { return 25; })
+            .centerBar(true)
+            .on("filtered", filtered)
+            .xAxis().ticks(6);
+
+        // for local sample data only
+        /*
         if (j == 1) {           
             chart
                 .width(290)
@@ -1669,6 +1690,7 @@ function setupCrossFilter(attrs: Attributes) {
                 .on("filtered", filtered)
                 .xAxis().ticks(6);
         }
+        */
     }
 
 	// keep track of total readings

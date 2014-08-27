@@ -2475,7 +2475,7 @@ class Brain3DApp implements Application, Loopable {
         }
 
         // Set up the node colourings
-        this.nodeColourings = this.dataSet.attributes.get('module_id').map((group: number) => {
+        this.nodeColourings = this.dataSet.attributes.attrValues[0].map((group: number) => {
             //var str = this.d3ColorSelector(group).replace("#", "0x");
             //return parseInt(str);
             return 0xd3d3d3;
